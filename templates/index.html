@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Rainbow Table Attack — Virtual Lab (Fullstack)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="app">
+      <header>
+        <div class="header-content">
+          <div class="logo-area">
+            <div class="logo-icon">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M12 2a10 10 0 0 1 0 20" />
+                <path d="M12 2a10 10 0 0 0 0 20" />
+                <path d="M2 12h20" />
+              </svg>
+            </div>
+            <h1>
+              Rainbow Table Attack <span class="accent">— Virtual Lab</span>
+            </h1>
+          </div>
+          <p class="subtitle">
+            Flask backend runs the real algorithm. This page only sends input &
+            renders results.
+          </p>
+        </div>
+      </header>
+
+      <main>
+        <div class="steps-row">
+          <div class="panel step-panel" id="panel-build">
+            <div class="panel-header">
+              <span class="step-badge">1</span>
+              <h2>Build Table</h2>
+            </div>
+            <p class="hint">
+              {{ total_space }} passwords (a–z, len 4). {{ num_tables }} tables
+              × {{ chains }} chains × {{ chain_len }} steps. Unique starts, no
+              repeats.
+            </p>
+            <button class="primary" id="buildBtn">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg>
+              Build rainbow table
+            </button>
+            <div class="stat-list" id="tableStats" style="display: none"></div>
+          </div>
+
+          <div class="panel step-panel" id="panel-hash">
+            <div class="panel-header">
+              <span class="step-badge">2</span>
+              <h2>Hash Password</h2>
+            </div>
+            <p class="hint">
+              MD5 turns a password into a fixed hash — what a system stores
+              instead of plaintext.
+            </p>
+            <label for="pwInput">Password (4 lowercase letters)</label>
+            <input
+              type="text"
+              id="pwInput"
+              maxlength="4"
+              placeholder="e.g. abcd"
+              autocomplete="off"
+              spellcheck="false"
+            />
+            <button class="secondary" id="hashBtn">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              Compute MD5 hash
+            </button>
+            <div class="stat-list" id="hashOut" style="display: none"></div>
+          </div>
+
+          <div class="panel step-panel" id="panel-attack">
+            <div class="panel-header">
+              <span class="step-badge">3</span>
+              <h2>Attack Hash</h2>
+            </div>
+            <p class="hint">
+              Given only the hash, search tables for a matching chain, then
+              confirm the plaintext.
+            </p>
+            <button class="primary" id="crackBtn" disabled>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              Run attack
+            </button>
+            <button class="secondary" id="sampleBtn" disabled>
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              Try a sample
+            </button>
+          </div>
+        </div>
+
+        <div class="result-area">
+          <div class="panel result-panel">
+            <div class="panel-header">
+              <span class="step-badge result-badge">⬤</span>
+              <h2>Result</h2>
+            </div>
+            <div class="result-columns">
+              <div class="result-col">
+                <div class="log" id="searchLog">
+                  <div class="empty">
+                    Build → Hash → Attack to see results here.
+                  </div>
+                </div>
+              </div>
+              <div class="result-col">
+                <div class="trace" id="trace"></div>
+                <div id="verdict"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <footer>
+        Backend: <code>app.py</code> · Reduction:
+        <code
+          >candidate = (int(hash,16) + step + tableIdx × 1000003) mod 26⁴</code
+        >
+      </footer>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+  </body>
+</html>
